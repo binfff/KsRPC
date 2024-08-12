@@ -24,7 +24,14 @@ public class MapRemoteRegister {
 
     public static void regist(String serviceName, URL url) {
         map.computeIfAbsent(serviceName, k -> new ArrayList<>())
-            .add(new ServiceInfo(url, System.currentTimeMillis()));
+            .stream()
+            .map(ServiceInfo::getUrl)
+            .noneMatch(existingUrl -> existingUrl.equals(url));
+
+        List<ServiceInfo> serviceList = map.get(serviceName);
+        if (serviceList.stream().noneMatch(serviceInfo -> serviceInfo.getUrl().equals(url))) {
+            serviceList.add(new ServiceInfo(url, System.currentTimeMillis()));
+        }
     }
 
     public static List<ServiceInfo> get(String serviceName) {

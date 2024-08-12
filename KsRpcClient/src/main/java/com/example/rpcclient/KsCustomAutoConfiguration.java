@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConditionalOnProperty(name = "spring.cloud.kscustom.discovery.enabled", matchIfMissing = true)
 @AutoConfigureBefore({SimpleDiscoveryClientAutoConfiguration.class, CommonsClientAutoConfiguration.class})
-public class KsCustomDiscoveryClientAutoConfiguration {
+public class KsCustomAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean

@@ -32,7 +32,7 @@ public class KsReactiveDiscoveryClient implements ReactiveDiscoveryClient {
 
     @Override
     public Flux<ServiceInstance> getInstances(String serviceId) {
-        logger.info("Fetching instances for serviceId: {}", serviceId);
+        logger.debug("Fetching instances for serviceId: {}", serviceId);
         return fetchInstancesFromRegistry(serviceId)
             .flatMapMany(urls -> {
                 List<ServiceInstance> instances = urls.stream()
@@ -44,7 +44,7 @@ public class KsReactiveDiscoveryClient implements ReactiveDiscoveryClient {
                         "https".equalsIgnoreCase(url.getProtocol())
                     ))
                     .collect(Collectors.toList());
-                logger.info("Instances fetched for serviceId {}: {}", serviceId, instances);
+                logger.debug("Instances fetched for serviceId {}: {}", serviceId, instances);
                 return Flux.fromIterable(instances);
             });
     }
