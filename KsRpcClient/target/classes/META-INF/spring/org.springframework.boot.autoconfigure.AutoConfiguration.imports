@@ -1,0 +1,2 @@
+com.example.rpcclient.HeartbeatAutoConfiguration
+com.example.rpcclient.KsCustomDiscoveryClientAutoConfiguration
