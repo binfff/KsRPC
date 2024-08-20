@@ -4,11 +4,15 @@ import com.alibaba.fastjson.JSON;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
@@ -34,6 +38,22 @@ public class KsClientProxy implements InvocationHandler, EnvironmentAware {
     private int serverPort;
     //    private final Map<String, String> serviceRegistry;  // 存储服务名到地址的映射
     private final Class<?> interfaceClass;
+
+    private static final Map<Class<? extends Annotation>, Function<Method, String>> MAPPING_ANNOTATIONS = new HashMap<>();
+
+    static {
+        MAPPING_ANNOTATIONS.put(GetMapping.class,
+            method -> method.getAnnotation(GetMapping.class).value()[0]);
+        MAPPING_ANNOTATIONS.put(PostMapping.class,
+            method -> method.getAnnotation(PostMapping.class).value()[0]);
+        MAPPING_ANNOTATIONS.put(DeleteMapping.class,
+            method -> method.getAnnotation(DeleteMapping.class).value()[0]);
+        MAPPING_ANNOTATIONS.put(PatchMapping.class,
+            method -> method.getAnnotation(PatchMapping.class).value()[0]);
+        MAPPING_ANNOTATIONS.put(RequestMapping.class,
+            method -> method.getAnnotation(RequestMapping.class).value()[0]);
+    }
+
 
     public KsClientProxy(Class<?> interfaceClass) {
         this.interfaceClass = interfaceClass;
@@ -96,45 +116,19 @@ public class KsClientProxy implements InvocationHandler, EnvironmentAware {
     }
 
     private static String getRequestMethod(Method method) {
-        if (method.isAnnotationPresent(GetMapping.class)) {
-            return "GET";
-        } else if (method.isAnnotationPresent(PostMapping.class)) {
-            return "POST";
-        } else if (method.isAnnotationPresent(PutMapping.class)) {
-            return "PUT";
-        } else if (method.isAnnotationPresent(DeleteMapping.class)) {
-            return "DELETE";
-        } else if (method.isAnnotationPresent(PatchMapping.class)) {
-            return "PATCH";
-        } else if (method.isAnnotationPresent(RequestMapping.class)) {
-            RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
-            RequestMethod[] methods = requestMapping.method();
-            if (methods.length == 0) {
-                // 默认情况下，RequestMapping 支持所有 HTTP 方法，选择一个默认方法，例如 GET
-                return "GET";
-            } else {
-                // 选择第一个指定的方法
-                return methods[0].name();
-            }
-        } else {
-            throw new UnsupportedOperationException("Unsupported request method");
-        }
+        return MAPPING_ANNOTATIONS.entrySet().stream()
+            .filter(entry -> method.isAnnotationPresent(entry.getKey()))
+            .findFirst()
+            .map(entry -> entry.getValue().apply(method))
+            .orElseThrow(() -> new UnsupportedOperationException("Unsupported request method"));
     }
-    private static String getPathFromAnnotation(Method method) {
-        if (method.isAnnotationPresent(GetMapping.class)) {
-            return method.getAnnotation(GetMapping.class).value()[0];
-        } else if (method.isAnnotationPresent(PostMapping.class)) {
-            return method.getAnnotation(PostMapping.class).value()[0];
-        } else if (method.isAnnotationPresent(PutMapping.class)) {
-            return method.getAnnotation(PutMapping.class).value()[0];
-        } else if (method.isAnnotationPresent(DeleteMapping.class)) {
-            return method.getAnnotation(DeleteMapping.class).value()[0];
-        } else if (method.isAnnotationPresent(PatchMapping.class)) {
-            return method.getAnnotation(PatchMapping.class).value()[0];
-        } else if (method.isAnnotationPresent(RequestMapping.class)) {
-            return method.getAnnotation(RequestMapping.class).value()[0];
-        } else {
-            throw new UnsupportedOperationException("No mapping annotation found on method");
-        }
+
+    public static String getPathFromAnnotation(Method method) {
+        return MAPPING_ANNOTATIONS.entrySet().stream()
+            .filter(entry -> method.isAnnotationPresent(entry.getKey()))
+            .findFirst()
+            .map(entry -> entry.getValue().apply(method))
+            .orElseThrow(
+                () -> new UnsupportedOperationException("No mapping annotation found on method"));
     }
 }

@@ -33,7 +33,6 @@ public class KsClientsRegistrar implements ImportBeanDefinitionRegistrar {
                     .isAnnotation()) {
                     isCandidate = true;
                 }
-
                 return isCandidate;
             }
         };

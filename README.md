@@ -78,3 +78,17 @@ public interface MyServiceClient {
 }
 ```
 
+启动类上添加`@EnableKsClients`
+
+```java
+@EnableKsClients
+public class ServiceOneApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ServiceOneApplication.class, args);
+
+    }
+
+}
+```
+
